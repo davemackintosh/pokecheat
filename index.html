@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let map, marker
+        const {ipcRenderer} = require("electron")
+          fetch("https://www.googleapis.com/geolocation/v1/geolocate?key=AIzaSyDZXHH0Z1HKUaAYDM7Cj0zKjKzxJ_6YQPQ", { method: "POST" })
+          .then(res => res.json())
+          .then(pos => {
+            ipcRenderer.send("latlng", pos.location)
+
+            map = new google.maps.Map(document.getElementById('map'), {
+              center: {
+                lat: pos.location.lat,
+                lng: pos.location.lng
+              },
+              zoom: 15
+            });
+
+            google.maps.event.addListener(map, 'click', event => {
+              if (marker) marker.setMap(null)
+              marker = new google.maps.Marker({
+                position: event.latLng,
+                map: map
+              });
+
+              ipcRenderer.send("latlng", {
+                lat: event.latLng.lat(),
+                lng: event.latLng.lng()
+              })
+            });
+          })
+          .catch(console.error.bind(console))
+      })
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDZXHH0Z1HKUaAYDM7Cj0zKjKzxJ_6YQPQ"
+    async></script>
+  </body>
+</html>
